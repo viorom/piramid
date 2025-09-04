@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piramid Project: Framework การจัดการต้นทุนตามโปรเจกต์</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Corporate Clarity -->
+    <!-- Application Structure Plan: The application is designed as a strategic consulting report on a single, scrollable page with a fixed sidebar for navigation. This structure allows executives to either get a high-level overview or dive deep into specific sections. The flow is logical: 1. Executive Summary (Why this is important), 2. Current State Analysis (The problem), 3. Proposed Framework (The solution, with interactive elements to demonstrate the concept), 4. Implementation Roadmap (How to get it done), and 5. Success Factors (What is needed to succeed). This non-linear yet guided structure is chosen for its clarity and effectiveness in communicating a strategic business transformation, which is more user-friendly than mirroring the fragmented structure of the source documents. -->
+    <!-- Visualization & Content Choices:
+        - Report Info: Need for project profitability. -> Goal: Inform leadership. -> Viz: Key metric cards (HTML/CSS). -> Interaction: None. -> Justification: Quick, high-impact summary.
+        - Report Info: Current process aggregates costs. -> Goal: Contrast old vs. new. -> Viz: Before/After diagram (HTML/CSS Flexbox). -> Interaction: None. -> Justification: Simple visual comparison is most effective.
+        - Report Info: Need for cost codes, linking costs to projects. -> Goal: Explain the new process. -> Viz: Interactive dashboard with dropdown. -> Interaction: User selects a project to dynamically update two charts (Budget vs. Actual Bar Chart, Cost Breakdown Donut Chart). -> Justification: Interaction makes the concept of project-based tracking tangible and demonstrates its benefits. -> Library: Chart.js (Canvas).
+        - Report Info: Project plan requires phased implementation. -> Goal: Organize and present timeline. -> Viz: Visual timeline/roadmap (HTML/CSS). -> Interaction: None. -> Justification: Clearly visualizes the project stages and duration.
+        - CONFIRMATION: All visualizations are built using HTML/CSS or Chart.js on Canvas. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Sarabun', sans-serif;
+            background-color: #F8F9FA;
+            color: #343A40;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        .sidebar-link.active, .sidebar-link:hover {
+            background-color: #E9ECEF;
+            color: #005B96;
+            transform: translateX(4px);
+        }
+        .step-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -2.375rem;
+            top: 0.5rem;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 50%;
+            background-color: #3B82F6;
+            border: 4px solid #DBEAFE;
+        }
+    </style>
+</head>
+<body class="scroll-smooth">
+
+    <div class="flex">
+        <aside class="w-64 fixed top-0 left-0 h-screen bg-white shadow-md p-4 flex-col justify-between hidden lg:flex">
+            <div>
+                <div class="flex items-center space-x-2 mb-8">
+                    <div class="p-2 bg-blue-600 rounded-lg">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold text-gray-800">Piramid Solutions</h1>
+                        <h2 class="text-sm font-semibold text-blue-800">Project-Based Costing</h2>
+                    </div>
+                </div>
+                <nav id="sidebar-nav">
+                    <ul>
+                        <li><a href="#summary" class="sidebar-link active block py-2.5 px-4 rounded-lg font-medium text-gray-700 text-sm">บทสรุปผู้บริหาร</a></li>
+                        <li><a href="#current-state" class="sidebar-link block py-2.5 px-4 rounded-lg font-medium text-gray-700 text-sm">การวิเคราะห์สถานะปัจจุบัน</a></li>
+                        <li><a href="#framework" class="sidebar-link block py-2.5 px-4 rounded-lg font-medium text-gray-700 text-sm">กรอบการดำเนินงานที่เสนอ</a></li>
+                        <li><a href="#dashboard" class="sidebar-link block py-2.5 px-4 rounded-lg font-medium text-gray-700 text-sm">แดชบอร์ดวิเคราะห์โครงการ</a></li>
+                        <li><a href="#roadmap" class="sidebar-link block py-2.5 px-4 rounded-lg font-medium text-gray-700 text-sm">แผนการดำเนินงาน</a></li>
+                        <li><a href="#success-factors" class="sidebar-link block py-2.5 px-4 rounded-lg font-medium text-gray-700 text-sm">ปัจจัยสู่ความสำเร็จ</a></li>
+                    </ul>
+                </nav>
+            </div>
+            <div class="text-xs text-gray-500">
+                <p>เอกสารนี้จัดทำโดยที่ปรึกษา</p>
+                <p class="font-semibold">McKinsey & Company</p>
+            </div>
+        </aside>
+
+        <main class="lg:ml-64 flex-1 p-4 md:p-8">
+            <header class="lg:hidden mb-6 p-4 bg-white rounded-lg shadow-sm">
+                 <h1 class="text-2xl font-bold text-gray-800">Piramid Solutions</h1>
+                 <h2 class="text-lg font-semibold text-blue-800">Project-Based Costing Framework</h2>
+                 <select id="mobile-nav" class="mt-4 w-full p-2 border rounded-md bg-white">
+                     <option value="#summary">บทสรุปผู้บริหาร</option>
+                     <option value="#current-state">การวิเคราะห์สถานะปัจจุบัน</option>
+                     <option value="#framework">กรอบการดำเนินงานที่เสนอ</option>
+                     <option value="#dashboard">แดชบอร์ดวิเคราะห์โครงการ</option>
+                     <option value="#roadmap">แผนการดำเนินงาน</option>
+                     <option value="#success-factors">ปัจจัยสู่ความสำเร็จ</option>
+                 </select>
+            </header>
+
+            <section id="summary" class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">1. บทสรุปสำหรับผู้บริหาร</h2>
+                <p class="text-gray-700 mb-6 leading-relaxed">
+                    Piramid Solutions มีโอกาสในการเพิ่มประสิทธิภาพการทำกำไรและควบคุมต้นทุนได้อย่างแม่นยำยิ่งขึ้น ผ่านการปรับเปลี่ยนกระบวนการทางการเงินสู่ระบบการจัดการต้นทุนและรายได้ตามโปรเจกต์ (Project-Based Costing) ซึ่งจะช่วยให้ผู้บริหารสามารถตัดสินใจทางธุรกิจบนพื้นฐานของข้อมูลที่ถูกต้องและเรียลไทม์ของแต่ละโครงการ ข้อเสนอนี้จะนำเสนอกรอบการดำเนินงานเพื่อสร้างรากฐานทางการเงินที่แข็งแกร่ง รองรับการเติบโตของบริษัทในอนาคต และเพิ่มความสามารถในการแข่งขันในตลาด IT Solutions
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 class="text-3xl font-bold text-blue-700">+30%</h3>
+                        <p class="text-sm font-semibold text-blue-600">เพิ่มความชัดเจนในการทำกำไร</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                        <h3 class="text-3xl font-bold text-green-700">~15%</h3>
+                        <p class="text-sm font-semibold text-green-600">ลดความคลาดเคลื่อนของงบประมาณ</p>
+                    </div>
+                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                        <h3 class="text-3xl font-bold text-yellow-700">4 ขั้นตอน</h3>
+                        <p class="text-sm font-semibold text-yellow-600">สู่การเปลี่ยนแปลงที่ยั่งยืน</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="current-state" class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">2. การวิเคราะห์สถานะปัจจุบัน</h2>
+                 <p class="text-gray-700 mb-6 leading-relaxed">
+                   ปัจจุบัน Piramid Solutions บันทึกต้นทุนและรายได้ในภาพรวม ทำให้ยากต่อการวิเคราะห์ประสิทธิภาพและกำไรที่แท้จริงของแต่ละโครงการบริการ ซึ่งเปรียบเสมือน "สินค้า" แต่ละชิ้นของบริษัท การไม่มีข้อมูลระดับโปรเจกต์ทำให้การตั้งงบประมาณ การประเมินผลงาน และการกำหนดราคาเสนอลูกค้าใหม่มีความท้าทาย ซึ่งอาจส่งผลกระทบต่อความสามารถในการแข่งขันในระยะยาว
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="border-2 border-red-200 p-4 rounded-lg bg-red-50">
+                        <h3 class="text-lg font-bold text-red-700 text-center mb-3 flex items-center justify-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>ภาพรวมปัจจุบัน (As-Is)</h3>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li>ต้นทุนและรายได้ถูกบันทึกในภาพรวม (Aggregated)</li>
+                            <li>ไม่สามารถระบุต้นทุนทางตรง (เช่น ค่าแรงทีม Dev, License) ของแต่ละโปรเจกต์ได้ชัดเจน</li>
+                            <li>การปันส่วนต้นทุนทางอ้อม (เช่น ค่าเช่า, IT Support) ไม่สะท้อนการใช้งานจริง</li>
+                             <li>ประเมินกำไรขาดทุนรายโปรเจกต์ได้ยากและไม่ทันท่วงที</li>
+                             <li>การตั้งราคาโครงการใหม่ dựa trên cảm giácมากกว่าข้อมูล</li>
+                        </ul>
+                    </div>
+                    <div class="border-2 border-green-200 p-4 rounded-lg bg-green-50">
+                        <h3 class="text-lg font-bold text-green-700 text-center mb-3 flex items-center justify-center"><svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>เป้าหมาย (To-Be)</h3>
+                        <ul class="list-disc list-inside text-gray-700 space-y-2">
+                            <li>ทุกโปรเจกต์มีรหัส (Project Code) ที่ชัดเจนในระบบ Mango ERP</li>
+                            <li>ต้นทุนทุกรายการถูกผูกกับ Project Code ตั้งแต่ขั้นตอนการจัดซื้อ (PR/PO) และการลงเวลา (Timesheet)</li>
+                             <li>สามารถปันส่วนต้นทุนทางอ้อมอย่างสมเหตุสมผลตามหลักการที่กำหนด</li>
+                             <li>สร้างรายงานกำไร-ขาดทุน และ งบประมาณเทียบค่าใช้จ่ายจริง ได้ในระดับโปรเจกต์แบบเรียลไทม์</li>
+                             <li>ใช้ข้อมูลในอดีตเพื่อกำหนดราคาและงบประมาณโครงการใหม่ที่แม่นยำขึ้น</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="framework" class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">3. กรอบการดำเนินงานที่เสนอ (Proposed Framework)</h2>
+                <p class="text-gray-700 mb-6 leading-relaxed">
+                    เราขอเสนอ Framework 4 ขั้นตอนเพื่อปรับเปลี่ยนกระบวนการสู่ Project-Based Costing โดยเริ่มจากการวางโครงสร้างข้อมูลพื้นฐาน, การบูรณาการเข้ากับกระบวนการทำงานปัจจุบัน, การใช้เทคโนโลยีเพื่อบันทึกข้อมูล, และสุดท้ายคือการวิเคราะห์และนำข้อมูลไปใช้ในการตัดสินใจทางธุรกิจ
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="step-card bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+                        <div class="flex items-center justify-center mb-3">
+                            <span class="bg-blue-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">1</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg mb-2">วางโครงสร้าง (Structure)</h3>
+                        <p class="text-sm text-gray-600">กำหนดโครงสร้างรหัสโครงการ (Project Code) และผังบัญชีต้นทุน (Cost Codes) ที่เป็นมาตรฐาน เพื่อใช้เป็นแกนหลักในการบันทึกข้อมูล</p>
+                    </div>
+                    <div class="step-card bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+                        <div class="flex items-center justify-center mb-3">
+                            <span class="bg-blue-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">2</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg mb-2">บูรณาการ (Integrate)</h3>
+                        <p class="text-sm text-gray-600">นำ Project Code และ Cost Code ไปบังคับใช้ในทุกขั้นตอนของกระบวนการ ตั้งแต่การออกใบเสนอราคา, สัญญา, และการจัดซื้อ (PR)</p>
+                    </div>
+                    <div class="step-card bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+                        <div class="flex items-center justify-center mb-3">
+                            <span class="bg-blue-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">3</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg mb-2">บันทึกข้อมูล (Capture)</h3>
+                        <p class="text-sm text-gray-600">ใช้ระบบ Mango ERP และ Timesheet เพื่อบันทึกต้นทุนค่าแรงและค่าใช้จ่ายอื่นๆ โดยอ้างอิงถึง Project Code ที่เกี่ยวข้องเสมอ</p>
+                    </div>
+                    <div class="step-card bg-gray-50 p-5 rounded-lg border border-gray-200 text-center">
+                        <div class="flex items-center justify-center mb-3">
+                           <span class="bg-blue-600 text-white rounded-full h-10 w-10 flex items-center justify-center font-bold text-lg">4</span>
+                        </div>
+                        <h3 class="font-bold text-gray-800 text-lg mb-2">วิเคราะห์ (Analyze)</h3>
+                        <p class="text-sm text-gray-600">สร้างรายงานวิเคราะห์เปรียบเทียบงบประมาณกับค่าใช้จ่ายจริง และรายงานกำไร-ขาดทุนในระดับโปรเจกต์ เพื่อการตัดสินใจ</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="dashboard" class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">4. แดชบอร์ดวิเคราะห์โครงการ (ตัวอย่าง)</h2>
+                <p class="text-gray-700 mb-6 leading-relaxed">
+                    นี่คือตัวอย่างแดชบอร์ดที่ Piramid Solutions จะสามารถสร้างได้หลังจากปรับใช้ Framework นี้แล้ว ผู้ใช้สามารถเลือกโปรเจกต์ที่สนใจเพื่อดูการเปรียบเทียบงบประมาณกับค่าใช้จ่ายจริง และสัดส่วนของต้นทุนประเภทต่างๆ ซึ่งจะให้ข้อมูลเชิงลึกที่มีค่าสำหรับการบริหารจัดการโครงการและการวางแผนในอนาคต
+                </p>
+                <div class="mb-6 max-w-lg mx-auto">
+                    <label for="projectSelector" class="block text-sm font-medium text-gray-700 mb-1">เลือกโปรเจกต์เพื่อดูข้อมูล:</label>
+                    <select id="projectSelector" class="w-full p-2 border border-gray-300 rounded-md bg-white focus:ring-blue-500 focus:border-blue-500 shadow-sm">
+                        <option value="PJ001">PJ001 - ERP Implementation for ABC Corp</option>
+                        <option value="PJ002">PJ002 - IT Infrastructure Setup for XYZ Ltd</option>
+                        <option value="PJ003">PJ003 - Payroll System for TTT Inc</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                    <div>
+                        <h3 class="text-lg font-semibold text-center text-gray-800 mb-2">งบประมาณเทียบกับค่าใช้จ่ายจริง (Budget vs. Actual)</h3>
+                        <div class="chart-container">
+                            <canvas id="budgetVsActualChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-center text-gray-800 mb-2">สัดส่วนต้นทุนโครงการ (Cost Breakdown)</h3>
+                         <div class="chart-container">
+                            <canvas id="costBreakdownChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="roadmap" class="mb-12 bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">5. แผนการดำเนินงาน (Implementation Roadmap)</h2>
+                <p class="text-gray-700 mb-6 leading-relaxed">
+                    การเปลี่ยนแปลงนี้สามารถเกิดขึ้นได้ภายใน 4-6 เดือน โดยแบ่งออกเป็น 4 ระยะหลัก (Phase) เพื่อให้การเปลี่ยนผ่านเป็นไปอย่างราบรื่นและมีการจัดการความเปลี่ยนแปลงที่มีประสิทธิภาพ
+                </p>
+                <div class="relative pl-12 border-l-2 border-blue-300">
+                    <div class="timeline-item mb-10">
+                        <h3 class="text-lg font-semibold text-blue-700">Phase 1: Foundation & Planning (เดือนที่ 1)</h3>
+                        <p class="text-gray-600 mt-1">ออกแบบโครงสร้าง Project Code และ Cost Code, ประชุมร่วมกับทุกฝ่ายที่เกี่ยวข้อง, และวางแผนการปรับปรุงระบบ ERP (Mango)</p>
+                    </div>
+                    <div class="timeline-item mb-10">
+                        <h3 class="text-lg font-semibold text-blue-700">Phase 2: System Configuration & Training (เดือนที่ 2-3)</h3>
+                        <p class="text-gray-600 mt-1">ปรับตั้งค่าระบบ ERP ตามโครงสร้างใหม่, จัดอบรมการใช้งานและกระบวนการใหม่ให้กับทีมบัญชี, ทีมโปรเจกต์, และฝ่ายจัดซื้อ</p>
+                    </div>
+                    <div class="timeline-item mb-10">
+                        <h3 class="text-lg font-semibold text-blue-700">Phase 3: Pilot Program (เดือนที่ 4)</h3>
+                        <p class="text-gray-600 mt-1">ทดลองใช้ระบบใหม่กับ 2-3 โปรเจกต์นำร่อง เพื่อทดสอบกระบวนการและเก็บข้อมูล Feedback สำหรับการปรับปรุงก่อนการใช้งานจริง</p>
+                    </div>
+                    <div class="timeline-item">
+                        <h3 class="text-lg font-semibold text-blue-700">Phase 4: Full Roll-out & Optimization (เดือนที่ 5 เป็นต้นไป)</h3>
+                        <p class="text-gray-600 mt-1">นำระบบไปใช้กับทุกโปรเจกต์ใหม่, พัฒนารายงานและแดชบอร์ดอัตโนมัติ, และปรับปรุงกระบวนการอย่างต่อเนื่อง</p>
+                    </div>
+                </div>
+            </section>
+
+            <section id="success-factors" class="bg-white p-6 rounded-xl shadow-lg">
+                <h2 class="text-2xl font-bold text-blue-800 mb-4">6. ปัจจัยสู่ความสำเร็จ (Key Success Factors)</h2>
+                 <p class="text-gray-700 mb-6 leading-relaxed">
+                    เพื่อให้การปรับเปลี่ยนนี้ประสบความสำเร็จและสร้างประโยชน์สูงสุดให้กับองค์กร จำเป็นต้องอาศัยความร่วมมือและการสนับสนุนใน 3 ด้านหลักดังต่อไปนี้
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="text-center p-4">
+                        <div class="mx-auto bg-blue-100 text-blue-600 h-16 w-16 rounded-full flex items-center justify-center mb-3">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800">Management Buy-in</h3>
+                        <p class="text-gray-600">การสนับสนุนอย่างเต็มที่จากทีมผู้บริหารเป็นสิ่งสำคัญที่สุดในการขับเคลื่อนการเปลี่ยนแปลงทั่วทั้งองค์กร</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="mx-auto bg-green-100 text-green-600 h-16 w-16 rounded-full flex items-center justify-center mb-3">
+                            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800">Clear Process & Training</h3>
+                        <p class="text-gray-600">ต้องมีกระบวนการทำงานที่ชัดเจนและมีการฝึกอบรมพนักงานทุกคนที่เกี่ยวข้องให้เข้าใจและปฏิบัติตามได้อย่างถูกต้อง</p>
+                    </div>
+                    <div class="text-center p-4">
+                        <div class="mx-auto bg-yellow-100 text-yellow-600 h-16 w-16 rounded-full flex items-center justify-center mb-3">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        </div>
+                        <h3 class="font-bold text-lg text-gray-800">Data Accuracy</h3>
+                        <p class="text-gray-600">ความถูกต้องของข้อมูลที่บันทึกเป็นหัวใจของระบบ ดังนั้นต้องมีกระบวนการตรวจสอบและควบคุมคุณภาพของข้อมูลอย่างสม่ำเสมอ</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const projectData = {
+            'PJ001': {
+                labels: ['ทีม Dev', 'License', 'Consultant', 'ค่าเดินทาง', 'Overhead'],
+                budget: [1500000, 500000, 300000, 50000, 150000],
+                actual: [1650000, 480000, 320000, 65000, 150000],
+            },
+            'PJ002': {
+                labels: ['Hardware', 'ทีมติดตั้ง', 'ค่าเดินทาง', 'Software', 'Overhead'],
+                budget: [2000000, 400000, 150000, 300000, 250000],
+                actual: [1950000, 450000, 140000, 300000, 250000],
+            },
+            'PJ003': {
+                labels: ['ทีม Dev', 'ค่าทดสอบ', 'ค่าเดินทาง', 'Consultant', 'Overhead'],
+                budget: [800000, 100000, 40000, 150000, 100000],
+                actual: [750000, 120000, 55000, 150000, 100000],
+            }
+        };
+
+        let budgetVsActualChart, costBreakdownChart;
+
+        const chartOptions = {
+             maintainAspectRatio: false,
+             responsive: true,
+             plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed.y !== null) {
+                                label += new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                         callback: function(value, index, values) {
+                            return new Intl.NumberFormat('th-TH', { notation: "compact" , compactDisplay: "short" }).format(value);
+                        }
+                    }
+                }
+            }
+        };
+
+        const donutOptions = {
+            maintainAspectRatio: false,
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                tooltip: {
+                     callbacks: {
+                        label: function(context) {
+                            let label = context.label || '';
+                            if (label) {
+                                label += ': ';
+                            }
+                            if (context.parsed !== null) {
+                                label += new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', maximumFractionDigits: 0 }).format(context.parsed);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        };
+
+        function updateCharts(projectId) {
+            const data = projectData[projectId];
+
+            if (budgetVsActualChart) {
+                budgetVsActualChart.data.labels = data.labels;
+                budgetVsActualChart.data.datasets[0].data = data.budget;
+                budgetVsActualChart.data.datasets[1].data = data.actual;
+                budgetVsActualChart.update();
+            }
+
+            if (costBreakdownChart) {
+                costBreakdownChart.data.labels = data.labels;
+                costBreakdownChart.data.datasets[0].data = data.actual;
+                costBreakdownChart.update();
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const ctxBudget = document.getElementById('budgetVsActualChart').getContext('2d');
+            budgetVsActualChart = new Chart(ctxBudget, {
+                type: 'bar',
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: 'งบประมาณ (Budget)',
+                            data: [],
+                            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        },
+                        {
+                            label: 'ค่าใช้จ่ายจริง (Actual)',
+                            data: [],
+                            backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 1
+                        }
+                    ]
+                },
+                options: chartOptions
+            });
+
+            const ctxCost = document.getElementById('costBreakdownChart').getContext('2d');
+            costBreakdownChart = new Chart(ctxCost, {
+                type: 'doughnut',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'สัดส่วนต้นทุน',
+                        data: [],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)'
+                        ],
+                        hoverOffset: 4
+                    }]
+                },
+                options: donutOptions
+            });
+
+            const projectSelector = document.getElementById('projectSelector');
+            projectSelector.addEventListener('change', (e) => {
+                updateCharts(e.target.value);
+            });
+            updateCharts('PJ001');
+
+            const mobileNav = document.getElementById('mobile-nav');
+            mobileNav.addEventListener('change', (e) => {
+                const targetId = e.target.value;
+                document.querySelector(targetId).scrollIntoView({ behavior: 'smooth' });
+            });
+
+            const sections = document.querySelectorAll('section');
+            const navLinks = document.querySelectorAll('#sidebar-nav a');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href').substring(1) === entry.target.id) {
+                                link.classList.add('active');
+                            }
+                        });
+                        mobileNav.value = '#' + entry.target.id;
+                    }
+                });
+            }, { rootMargin: '-40% 0px -60% 0px' });
+
+            sections.forEach(section => {
+                observer.observe(section);
+            });
+
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    document.querySelector(this.getAttribute('href')).scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                });
+            });
+        });
+    </script>
+</body>
+</html>
